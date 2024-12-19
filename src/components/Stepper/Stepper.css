@@ -1,0 +1,62 @@
+/* src/components/Stepper/Stepper.css */
+.stepper {
+    width: 100%;
+    padding: 1.5rem 0;
+  }
+  
+  .stepper-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .step-item {
+    position: relative;
+  }
+  
+  .step-circle {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    background-color: #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .step-circle.active {
+    background-color: #2563eb;
+  }
+  
+  .step-number {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #4b5563;
+  }
+  
+  .step-circle.active .step-number {
+    color: white;
+  }
+  
+  .step-label {
+    position: absolute;
+    bottom: -1.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 8rem;
+    text-align: center;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #4b5563;
+  }
+  
+  .step-connector {
+    flex: 1;
+    height: 0.25rem;
+    margin: 0 1rem;
+    background-color: #e5e7eb;
+  }
+  
+  .step-connector.active {
+    background-color: #2563eb;
+  }

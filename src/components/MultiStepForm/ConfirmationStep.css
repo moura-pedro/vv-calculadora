@@ -1,0 +1,21 @@
+.confirmation-step {
+    padding: 2rem;
+    text-align: center;
+  }
+  
+  .confirmation-content {
+    max-width: 32rem;
+    margin: 0 auto;
+  }
+  
+  .confirmation-content h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #059669;
+    margin-bottom: 1rem;
+  }
+  
+  .confirmation-content p {
+    color: #4b5563;
+    font-size: 1.125rem;
+  }

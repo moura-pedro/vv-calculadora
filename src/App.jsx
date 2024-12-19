@@ -1,9 +1,9 @@
-import JobsForm from './components/JobsForm/JobsForm';
+import MultiStepForm from './components/MultiStepForm/MultiStepForm';
 
 function App() {
   return (
     <div>
-      <JobsForm />
+      <MultiStepForm />
     </div>
   );
 }
