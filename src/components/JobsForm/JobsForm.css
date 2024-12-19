@@ -156,3 +156,59 @@
     font-weight: 600;
     color: #28a745;
   }
+
+  .minimum-wage {
+    color: #6c757d;
+    font-weight: 500;
+  }
+
+  .jobs-form {
+    padding: 20px;
+    max-width: 1000px;
+    margin: 0 auto;
+    color: #333; /* Base text color */
+  }
+  
+  .summary-table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    color: #333;
+    padding: 12px;
+  }
+  
+  .summary-table td {
+    color: #333;
+    padding: 12px;
+  }
+  
+  .jobs-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .jobs-list li {
+    margin-bottom: 4px;
+    font-size: 14px;
+    color: #333;
+  }
+  
+  .total-salary {
+    font-weight: 600;
+    color: #28a745;
+  }
+  
+  .minimum-wage {
+    color: #495057;
+    font-weight: 500;
+  }
+  
+  .date-column {
+    font-weight: 500;
+    color: #333;
+  }
+  
+  /* Add hover effect for better row distinction */
+  .summary-table tbody tr:hover {
+    background-color: #f8f9fa;
+  }

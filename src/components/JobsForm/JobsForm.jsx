@@ -3,6 +3,46 @@ import React, { useState, useMemo } from 'react';
 import './JobsForm.css';
 
 const JobsForm = () => {
+  // Minimum wage data structure
+  const minimumWages = [
+    { date: '2024-01', value: 1412.00 },
+    { date: '2023-05', value: 1320.00 },
+    { date: '2023-01', value: 1302.00 },
+    { date: '2022-01', value: 1212.00 },
+    { date: '2021-01', value: 1100.00 },
+    { date: '2020-02', value: 1045.00 },
+    { date: '2020-01', value: 1039.00 },
+    { date: '2019-01', value: 998.00 },
+    { date: '2018-01', value: 954.00 },
+    { date: '2017-01', value: 937.00 },
+    { date: '2016-01', value: 880.00 },
+    { date: '2015-01', value: 788.00 },
+    { date: '2014-01', value: 724.00 },
+    { date: '2013-01', value: 678.00 },
+    { date: '2012-01', value: 622.00 },
+    { date: '2011-03', value: 545.00 },
+    { date: '2011-01', value: 540.00 },
+    { date: '2010-01', value: 510.00 },
+    { date: '2009-02', value: 465.00 },
+    { date: '2008-03', value: 415.00 },
+    { date: '2007-04', value: 380.00 },
+    { date: '2006-04', value: 350.00 },
+    { date: '2005-05', value: 300.00 },
+    { date: '2004-05', value: 260.00 },
+    { date: '2003-06', value: 240.00 },
+    { date: '2002-06', value: 200.00 },
+    { date: '2001-06', value: 180.00 },
+    { date: '2000-06', value: 151.00 },
+    { date: '1999-05', value: 136.00 },
+    { date: '1998-05', value: 130.00 },
+    { date: '1997-05', value: 120.00 },
+    { date: '1996-05', value: 112.00 },
+    { date: '1995-05', value: 100.00 },
+    { date: '1994-09', value: 70.00 },
+    { date: '1994-07', value: 64.79 }
+  ];
+
+  // State for jobs
   const [jobs, setJobs] = useState([{
     id: Date.now(),
     name: '',
@@ -13,6 +53,18 @@ const JobsForm = () => {
     salary: ''
   }]);
 
+  // Function to get minimum wage for a specific date
+  const getMinimumWageForDate = (dateStr) => {
+    const targetDate = dateStr;
+    for (const wage of minimumWages) {
+      if (targetDate >= wage.date) {
+        return wage.value;
+      }
+    }
+    return minimumWages[minimumWages.length - 1].value;
+  };
+
+  // Function to add a new job
   const addJob = () => {
     setJobs([...jobs, {
       id: Date.now(),
@@ -25,12 +77,14 @@ const JobsForm = () => {
     }]);
   };
 
+  // Function to remove a job
   const removeJob = (jobId) => {
     if (jobs.length > 1) {
       setJobs(jobs.filter(job => job.id !== jobId));
     }
   };
 
+  // Function to update job fields
   const updateJob = (jobId, field, value) => {
     setJobs(jobs.map(job => 
       job.id === jobId ? { ...job, [field]: value } : job
@@ -41,12 +95,11 @@ const JobsForm = () => {
   const getMonthsBetweenDates = (startDate, endDate) => {
     if (!startDate || !endDate) return [];
     
-    const start = new Date(startDate);
-    const end = new Date(endDate);
+    const start = new Date(startDate + "-01");
+    const end = new Date(endDate + "-01");
     const months = [];
     
     const current = new Date(start);
-    current.setDate(1); // Set to first day of month
     
     while (current <= end) {
       months.push(new Date(current));
@@ -69,7 +122,9 @@ const JobsForm = () => {
           if (!summary.has(monthKey)) {
             summary.set(monthKey, {
               total: 0,
-              jobs: []
+              jobs: [],
+              minimumWage: getMinimumWageForDate(monthKey),
+              displayDate: `${String(date.getMonth() + 2).padStart(2, '0')}/${date.getFullYear()}`
             });
           }
           
@@ -85,7 +140,6 @@ const JobsForm = () => {
       }
     });
     
-    // Convert to array and sort by date
     return Array.from(summary.entries())
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([month, data]) => ({
@@ -191,7 +245,6 @@ const JobsForm = () => {
           Add Another Job
         </button>
 
-        {/* Monthly Summary Table */}
         <div className="summary-table-container">
           <h3>Monthly Summary</h3>
           <table className="summary-table">
@@ -200,12 +253,13 @@ const JobsForm = () => {
                 <th>Month/Year</th>
                 <th>Jobs</th>
                 <th>Total Salary</th>
+                <th>Minimum Wage</th>
               </tr>
             </thead>
             <tbody>
-              {monthlySummary.map(({ month, jobs, total }) => (
+              {monthlySummary.map(({ month, jobs, total, minimumWage, displayDate }) => (
                 <tr key={month}>
-                  <td>{month.split('-').reverse().join('/')}</td>
+                  <td className="date-column">{displayDate}</td>
                   <td>
                     <ul className="jobs-list">
                       {jobs.map((job, index) => (
@@ -221,6 +275,12 @@ const JobsForm = () => {
                   </td>
                   <td className="total-salary">
                     R$ {total.toLocaleString('pt-BR', {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2
+                    })}
+                  </td>
+                  <td className="minimum-wage">
+                    R$ {minimumWage.toLocaleString('pt-BR', {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2
                     })}
