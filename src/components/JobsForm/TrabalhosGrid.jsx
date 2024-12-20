@@ -1,13 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useParams } from 'react-router-dom';
+import { supabase } from '../../supabaseClient';
 import { getMinimumWageForDate } from './SalarioMinimo';
 import { getTetoForDate } from './Teto';
-import './TrabalhosGrid.css'
+import './TrabalhosGrid.css';
 
 const TrabalhosGrid = () => {
+    const { id: formId } = useParams();
     const [dateRange, setDateRange] = useState([]);
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
     const [activeCell, setActiveCell] = useState(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isSaving, setIsSaving] = useState(false);
     const [jobColumns, setJobColumns] = useState([
         {
             id: 1,
@@ -21,18 +26,110 @@ const TrabalhosGrid = () => {
     const inputRefs = useRef({});
 
     useEffect(() => {
+        if (formId) {
+            loadFormData();
+        }
+    }, [formId]);
+
+    useEffect(() => {
         if (startDate && endDate) {
             const dates = generateDateRange(startDate, endDate);
             setDateRange(dates);
         }
     }, [startDate, endDate]);
 
+    const loadFormData = async () => {
+        try {
+            const { data, error } = await supabase
+                .from('form_data')
+                .select('*')
+                .eq('form_id', formId);
+
+            if (error) throw error;
+
+            if (data && data.length > 0) {
+                // Group data by job
+                const jobsMap = new Map();
+                data.forEach(row => {
+                    if (!jobsMap.has(row.job_id)) {
+                        jobsMap.set(row.job_id, {
+                            id: row.job_id,
+                            title: row.job_title,
+                            type: row.job_type,
+                            employmentType: row.employment_type,
+                            values: {}
+                        });
+                    }
+                    jobsMap.get(row.job_id).values[row.date] = row.salary;
+                });
+
+                setJobColumns(Array.from(jobsMap.values()));
+
+                // Set date range based on data
+                const dates = data.map(row => row.date);
+                const sortedDates = dates.sort();
+                setStartDate(sortedDates[0]);
+                setEndDate(sortedDates[sortedDates.length - 1]);
+            }
+        } catch (error) {
+            console.error('Error loading form data:', error);
+            alert('Error loading form data');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const saveGridData = async () => {
+        try {
+            setIsSaving(true);
+
+            // First delete existing data for this form
+            const { error: deleteError } = await supabase
+                .from('form_data')
+                .delete()
+                .eq('form_id', formId);
+
+            if (deleteError) throw deleteError;
+
+            // Prepare the data to save
+            const formDataToSave = jobColumns.flatMap(column => 
+                Object.entries(column.values)
+                    .filter(([_, salary]) => salary !== null && salary !== '') // Filter out empty values
+                    .map(([date, salary]) => ({
+                        form_id: formId,
+                        job_id: column.id,
+                        date,
+                        salary: parseFloat(salary) || 0,
+                        job_title: column.title,
+                        job_type: column.type,
+                        employment_type: column.employmentType
+                    }))
+            );
+
+            if (formDataToSave.length > 0) {
+                // Insert new data
+                const { error: insertError } = await supabase
+                    .from('form_data')
+                    .insert(formDataToSave);
+
+                if (insertError) throw insertError;
+            }
+
+            alert('Dados salvos com sucesso!');
+        } catch (error) {
+            console.error('Error saving data:', error);
+            alert('Erro ao salvar dados');
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
     const generateDateRange = (start, end) => {
         const dates = [];
         const [startYear, startMonth] = start.split('-').map(Number);
         const [endYear, endMonth] = end.split('-').map(Number);
 
-        const currentDate = new Date(startYear, startMonth - 1, 1); // Months are 0-based in JS
+        const currentDate = new Date(startYear, startMonth - 1, 1);
         const endDate = new Date(endYear, endMonth - 1, 1);
 
         while (currentDate <= endDate) {
@@ -94,16 +191,20 @@ const TrabalhosGrid = () => {
                 break;
 
             case 'ArrowRight':
-                e.preventDefault();
-                if (currentColIndex + 1 < jobColumns.length) {
-                    focusInput(currentRowIndex, jobColumns[currentColIndex + 1].id);
+                if (e.target.selectionStart === e.target.value.length) {
+                    e.preventDefault();
+                    if (currentColIndex + 1 < jobColumns.length) {
+                        focusInput(currentRowIndex, jobColumns[currentColIndex + 1].id);
+                    }
                 }
                 break;
 
             case 'ArrowLeft':
-                e.preventDefault();
-                if (currentColIndex > 0) {
-                    focusInput(currentRowIndex, jobColumns[currentColIndex - 1].id);
+                if (e.target.selectionStart === 0) {
+                    e.preventDefault();
+                    if (currentColIndex > 0) {
+                        focusInput(currentRowIndex, jobColumns[currentColIndex - 1].id);
+                    }
                 }
                 break;
 
@@ -157,6 +258,10 @@ const TrabalhosGrid = () => {
         }));
     };
 
+    if (isLoading) {
+        return <div className="loading">Carregando...</div>;
+    }
+
     return (
         <div className="grid-container">
             {/* Date Selection Controls */}
@@ -183,8 +288,16 @@ const TrabalhosGrid = () => {
                 <button
                     onClick={addJobColumn}
                     className="add-job-button"
+                    disabled={isSaving}
                 >
                     + Adicionar Trabalho
+                </button>
+                <button
+                    onClick={saveGridData}
+                    className="save-button"
+                    disabled={isSaving}
+                >
+                    {isSaving ? 'Salvando...' : 'Salvar'}
                 </button>
             </div>
 

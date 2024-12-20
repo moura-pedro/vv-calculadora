@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '../../supabaseClient';
 import './HomePage.css'
 
 const HomePage = () => {
@@ -7,36 +8,97 @@ const HomePage = () => {
     const [forms, setForms] = useState([]);
     const [isCreating, setIsCreating] = useState(false);
     const [newFormName, setNewFormName] = useState('');
+    const [isLoading, setIsLoading] = useState(true);
 
-    const createNewForm = () => {
+    useEffect(() => {
+        fetchForms();
+    }, []);
+
+    const fetchForms = async () => {
+        try {
+            const { data, error } = await supabase
+                .from('forms')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+            setForms(data || []);
+        } catch (error) {
+            console.error('Error fetching forms:', error);
+            alert('Error fetching forms');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const createNewForm = async () => {
         if (newFormName.trim()) {
-            const newForm = {
-                id: Date.now(),
-                name: newFormName,
-                createdAt: new Date(),
-                lastModified: new Date()
-            };
-            setForms([...forms, newForm]);
-            setNewFormName('');
-            setIsCreating(false);
+            try {
+                const newForm = {
+                    id: Date.now(),
+                    name: newFormName
+                    // Supabase will automatically set created_at and last_modified
+                };
+
+                const { data, error } = await supabase
+                    .from('forms')
+                    .insert([newForm])
+                    .select(); // Add this to get the returned data
+
+                if (error) throw error;
+
+                if (data && data[0]) {
+                    setForms([data[0], ...forms]);
+                    setNewFormName('');
+                    setIsCreating(false);
+                }
+            } catch (error) {
+                console.error('Error creating form:', error);
+                alert('Error creating form');
+            }
         }
     };
 
-    const deleteForm = (formId) => {
+    const deleteForm = async (formId) => {
         if (window.confirm('Tem certeza que deseja excluir este formulário?')) {
-            setForms(forms.filter(form => form.id !== formId));
+            try {
+                // Delete associated form data first
+                const { error: dataError } = await supabase
+                    .from('form_data')
+                    .delete()
+                    .eq('form_id', formId);
+
+                if (dataError) throw dataError;
+
+                // Then delete the form
+                const { error: formError } = await supabase
+                    .from('forms')
+                    .delete()
+                    .eq('id', formId);
+
+                if (formError) throw formError;
+
+                setForms(forms.filter(form => form.id !== formId));
+            } catch (error) {
+                console.error('Error deleting form:', error);
+                alert('Error deleting form');
+            }
         }
     };
 
-    const formatDate = (date) => {
+    const formatDate = (dateStr) => {
         return new Intl.DateTimeFormat('pt-BR', {
             day: '2-digit',
             month: '2-digit',
             year: 'numeric',
             hour: '2-digit',
             minute: '2-digit'
-        }).format(new Date(date));
+        }).format(new Date(dateStr));
     };
+
+    if (isLoading) {
+        return <div className="loading-state">Carregando...</div>;
+    }
 
     return (
         <div className="home-container">
@@ -106,8 +168,8 @@ const HomePage = () => {
                                 </button>
                             </div>
                             <div className="form-card-content">
-                                <p>Criado em: {formatDate(form.createdAt)}</p>
-                                <p>Última modificação: {formatDate(form.lastModified)}</p>
+                                <p>Criado em: {formatDate(form.created_at)}</p>
+                                <p>Última modificação: {formatDate(form.last_modified || form.created_at)}</p>
                             </div>
                             <div className="form-card-actions">
                                 <button 
