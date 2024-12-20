@@ -1,7 +1,7 @@
 // src/components/MultiStepForm/MultiStepForm.jsx
 import React, { useState } from 'react';
 import Stepper from '../Stepper/Stepper';
-import JobsForm from '../JobsForm/JobsForm';
+import TrabalhosGrid from '../JobsForm/TrabalhosGrid';
 import './MultiStepForm.css';
 
 const steps = [
@@ -15,59 +15,155 @@ const steps = [
 const MultiStepForm = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
-    jobs: [{
-      id: Date.now(),
-      name: '',
-      type: '',
-      employmentType: '',
-      startDate: '',
-      endDate: '',
-      salary: ''
-    }]
+    remuneracao: null,
+    salarioBeneficio: null,
+    tempoContribuicao: null,
+    sobrevida: null
   });
 
-  const handleJobsData = (data) => {
-    setFormData(prevData => ({
-      ...prevData,
-      jobs: data
-    }));
-  };
-
   const handleNext = () => {
-    setCurrentStep(2);
+    if (currentStep < steps.length) {
+      setCurrentStep(currentStep + 1);
+    }
   };
 
   const handleBack = () => {
-    setCurrentStep(1);
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
+
+  const handleSalarioBeneficioSubmit = (data) => {
+    setFormData(prev => ({
+      ...prev,
+      salarioBeneficio: data
+    }));
+    handleNext();
+  };
+
+  const handleTempoContribuicaoSubmit = (data) => {
+    setFormData(prev => ({
+      ...prev,
+      tempoContribuicao: data
+    }));
+    handleNext();
+  };
+
+  const handleSobrevidaSubmit = (data) => {
+    setFormData(prev => ({
+      ...prev,
+      sobrevida: data
+    }));
+    handleNext();
   };
 
   const renderStepContent = () => {
     switch (currentStep) {
       case 1:
         return (
-          <>
-            <JobsForm jobs={formData.jobs} onJobsChange={handleJobsData} />
+          <div className="step-content">
+            <TrabalhosGrid />
             <div className="navigation-buttons">
-              <button onClick={handleNext} className="next-button">
+              <button 
+                onClick={handleNext} 
+                className="next-button"
+              >
                 Próximo
               </button>
             </div>
-          </>
+          </div>
         );
+
       case 2:
         return (
-          <>
+          <div className="step-content">
             <div className="step-placeholder">
               <h2>Cálculo do Salário-de-Benefício</h2>
               <p>Esta funcionalidade será implementada em breve.</p>
             </div>
             <div className="navigation-buttons">
-              <button onClick={handleBack} className="back-button">
+              <button 
+                onClick={handleBack} 
+                className="back-button"
+              >
+                Voltar
+              </button>
+              <button 
+                onClick={handleNext} 
+                className="next-button"
+              >
+                Próximo
+              </button>
+            </div>
+          </div>
+        );
+
+      case 3:
+        return (
+          <div className="step-content">
+            <div className="step-placeholder">
+              <h2>Tempo de Contribuição</h2>
+              <p>Esta funcionalidade será implementada em breve.</p>
+            </div>
+            <div className="navigation-buttons">
+              <button 
+                onClick={handleBack} 
+                className="back-button"
+              >
+                Voltar
+              </button>
+              <button 
+                onClick={handleNext} 
+                className="next-button"
+              >
+                Próximo
+              </button>
+            </div>
+          </div>
+        );
+
+      case 4:
+        return (
+          <div className="step-content">
+            <div className="step-placeholder">
+              <h2>Cálculo da Sobrevida</h2>
+              <p>Esta funcionalidade será implementada em breve.</p>
+            </div>
+            <div className="navigation-buttons">
+              <button 
+                onClick={handleBack} 
+                className="back-button"
+              >
+                Voltar
+              </button>
+              <button 
+                onClick={handleNext} 
+                className="next-button"
+              >
+                Próximo
+              </button>
+            </div>
+          </div>
+        );
+
+      case 5:
+        return (
+          <div className="step-content">
+            <div className="step-placeholder">
+              <h2>Resultados</h2>
+              <p>Esta funcionalidade será implementada em breve.</p>
+            </div>
+            <div className="navigation-buttons">
+              <button 
+                onClick={handleBack} 
+                className="back-button"
+              >
                 Voltar
               </button>
             </div>
-          </>
+          </div>
         );
+
       default:
         return null;
     }
@@ -76,9 +172,7 @@ const MultiStepForm = () => {
   return (
     <div className="multi-step-form">
       <Stepper steps={steps} currentStep={currentStep} />
-      <div className="step-content">
-        {renderStepContent()}
-      </div>
+      {renderStepContent()}
     </div>
   );
 };

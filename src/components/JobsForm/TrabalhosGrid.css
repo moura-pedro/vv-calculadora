@@ -1,0 +1,39 @@
+/* TrabalhosGrid.css */
+.grid-container {
+    max-width: 100%;
+    overflow-x: auto;
+    padding: 1rem;
+  }
+  
+  input[type="number"] {
+    -moz-appearance: textfield;
+  }
+  
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  
+  .sticky {
+    position: sticky;
+    z-index: 10;
+  }
+  
+  th input, th select {
+    background-color: white;
+  }
+  
+  td input {
+    border: 1px solid transparent;
+  }
+  
+  td input:hover, td input:focus {
+    border-color: #e5e7eb;
+  }
+  
+  .month-column {
+    background-color: white;
+    left: 0;
+    z-index: 20;
+  }

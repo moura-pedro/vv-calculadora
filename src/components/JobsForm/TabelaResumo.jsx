@@ -1,28 +1,28 @@
 import React from 'react';
 
-const SummaryTable = ({ summary }) => {
+const TabelaResumo = ({ resumo }) => {
   return (
     <div className="summary-table-container">
-      <h3>Monthly Summary</h3>
+      <h3>Resumo Mensal</h3>
       <table className="summary-table">
         <thead>
           <tr>
-            <th>Month/Year</th>
-            <th>Jobs</th>
-            <th>Total Salary</th>
-            <th>Minimum Wage</th>
+            <th>Mês/Ano</th>
+            <th>Trabalhos</th>
+            <th>Salário Total</th>
+            <th>Salário Mínimo</th>
           </tr>
         </thead>
         <tbody>
-          {summary.map(({ month, jobs, total, minimumWage, displayDate }) => (
-            <tr key={month}>
+          {resumo.map(({ mes, trabalhos, total, salarioMinimo, displayDate }) => (
+            <tr key={mes}>
               <td className="date-column">{displayDate}</td>
               <td>
                 <ul className="jobs-list">
-                  {jobs.map((job, index) => (
+                  {trabalhos.map((trabalho, index) => (
                     <li key={index}>
-                      {job.name} ({job.type} - {job.employmentType})
-                      : R$ {job.salary.toLocaleString('pt-BR', {
+                      {trabalho.name} ({trabalho.type} - {trabalho.employmentType})
+                      : R$ {trabalho.salary.toLocaleString('pt-BR', {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2
                       })}
@@ -37,7 +37,7 @@ const SummaryTable = ({ summary }) => {
                 })}
               </td>
               <td className="minimum-wage">
-                R$ {minimumWage.toLocaleString('pt-BR', {
+                R$ {salarioMinimo.toLocaleString('pt-BR', {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2
                 })}
@@ -50,4 +50,4 @@ const SummaryTable = ({ summary }) => {
   );
 };
 
-export default SummaryTable;
+export default TabelaResumo;

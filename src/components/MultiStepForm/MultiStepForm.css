@@ -1,62 +1,74 @@
 /* src/components/MultiStepForm/MultiStepForm.css */
 .multi-step-form {
-  max-width: 64rem;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 1.5rem;
 }
 
 .step-content {
   margin-top: 2rem;
-}
-
-.navigation-buttons {
-  margin-top: 1.5rem;
-  display: flex;
-  justify-content: flex-end;
-  padding: 0 1rem;
-}
-
-.back-button {
-  padding: 0.5rem 1rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
-  color: #374151;
   background-color: white;
-  cursor: pointer;
-  font-size: 0.875rem;
-}
-
-.back-button:hover {
-  background-color: #f9fafb;
-}
-
-.next-button {
-  padding: 0.5rem 1rem;
-  background-color: #2563eb;
-  color: white;
-  border: none;
-  border-radius: 0.375rem;
-  cursor: pointer;
-  font-size: 0.875rem;
-}
-
-.next-button:hover {
-  background-color: #1d4ed8;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .step-placeholder {
   padding: 2rem;
-  background-color: #f9fafb;
-  border-radius: 0.5rem;
   text-align: center;
 }
 
 .step-placeholder h2 {
-  color: #1f2937;
+  color: #374151;
   font-size: 1.25rem;
+  font-weight: 600;
   margin-bottom: 1rem;
 }
 
 .step-placeholder p {
-  color: #6b7280;
+  color: #6B7280;
+}
+
+.navigation-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  padding: 1.5rem;
+  border-top: 1px solid #E5E7EB;
+}
+
+.back-button {
+  padding: 0.5rem 1rem;
+  background-color: white;
+  border: 1px solid #D1D5DB;
+  border-radius: 0.375rem;
+  color: #374151;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.back-button:hover {
+  background-color: #F9FAFB;
+}
+
+.next-button {
+  padding: 0.5rem 1rem;
+  background-color: #2563EB;
+  border: none;
+  border-radius: 0.375rem;
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.next-button:hover {
+  background-color: #1D4ED8;
+}
+
+.next-button:disabled {
+  background-color: #93C5FD;
+  cursor: not-allowed;
 }
