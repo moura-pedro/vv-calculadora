@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
-import { getMinimumWageForDate } from './SalarioMinimo';
-import { getTetoForDate } from './Teto';
+import DateRangeControls from './DateRangeControls';
+import JobTable from './JobTable';
 import './TrabalhosGrid.css';
 
 const TrabalhosGrid = () => {
@@ -10,9 +10,8 @@ const TrabalhosGrid = () => {
     const [dateRange, setDateRange] = useState([]);
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
-    const [activeCell, setActiveCell] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
-    const [isSaving, setIsSaving] = useState(false);
+    const [saveStatus, setSaveStatus] = useState('saved');
     const [jobColumns, setJobColumns] = useState([
         {
             id: 1,
@@ -24,19 +23,7 @@ const TrabalhosGrid = () => {
     ]);
 
     const inputRefs = useRef({});
-
-    useEffect(() => {
-        if (formId) {
-            loadFormData();
-        }
-    }, [formId]);
-
-    useEffect(() => {
-        if (startDate && endDate) {
-            const dates = generateDateRange(startDate, endDate);
-            setDateRange(dates);
-        }
-    }, [startDate, endDate]);
+    const saveTimeoutRef = useRef(null);
 
     const loadFormData = async () => {
         try {
@@ -79,11 +66,23 @@ const TrabalhosGrid = () => {
         }
     };
 
-    const saveGridData = async () => {
-        try {
-            setIsSaving(true);
+    useEffect(() => {
+        if (formId) {
+            loadFormData();
+        }
+    }, [formId]);
 
-            // First delete existing data for this form
+    useEffect(() => {
+        if (startDate && endDate) {
+            const dates = generateDateRange(startDate, endDate);
+            setDateRange(dates);
+        }
+    }, [startDate, endDate]);
+
+    const saveData = useCallback(async (dataToSave) => {
+        try {
+            setSaveStatus('saving');
+
             const { error: deleteError } = await supabase
                 .from('form_data')
                 .delete()
@@ -91,38 +90,60 @@ const TrabalhosGrid = () => {
 
             if (deleteError) throw deleteError;
 
-            // Prepare the data to save
-            const formDataToSave = jobColumns.flatMap(column => 
-                Object.entries(column.values)
-                    .filter(([_, salary]) => salary !== null && salary !== '') // Filter out empty values
-                    .map(([date, salary]) => ({
-                        form_id: formId,
-                        job_id: column.id,
-                        date,
-                        salary: parseFloat(salary) || 0,
-                        job_title: column.title,
-                        job_type: column.type,
-                        employment_type: column.employmentType
-                    }))
-            );
-
-            if (formDataToSave.length > 0) {
-                // Insert new data
+            if (dataToSave.length > 0) {
                 const { error: insertError } = await supabase
                     .from('form_data')
-                    .insert(formDataToSave);
+                    .insert(dataToSave);
 
                 if (insertError) throw insertError;
             }
 
-            alert('Dados salvos com sucesso!');
+            await supabase
+                .from('forms')
+                .update({ last_modified: new Date().toISOString() })
+                .eq('id', formId);
+
+            setSaveStatus('saved');
         } catch (error) {
             console.error('Error saving data:', error);
-            alert('Erro ao salvar dados');
-        } finally {
-            setIsSaving(false);
+            setSaveStatus('error');
         }
-    };
+    }, [formId]);
+
+    const prepareDataForSave = useCallback(() => {
+        return jobColumns.flatMap(column => 
+            Object.entries(column.values)
+                .filter(([_, salary]) => salary !== null && salary !== '')
+                .map(([date, salary]) => ({
+                    form_id: formId,
+                    job_id: column.id,
+                    date,
+                    salary: parseFloat(salary) || 0,
+                    job_title: column.title,
+                    job_type: column.type,
+                    employment_type: column.employmentType
+                }))
+        );
+    }, [jobColumns, formId]);
+
+    useEffect(() => {
+        if (!isLoading && formId) {
+            if (saveTimeoutRef.current) {
+                clearTimeout(saveTimeoutRef.current);
+            }
+
+            saveTimeoutRef.current = setTimeout(() => {
+                const dataToSave = prepareDataForSave();
+                saveData(dataToSave);
+            }, 1000);
+        }
+
+        return () => {
+            if (saveTimeoutRef.current) {
+                clearTimeout(saveTimeoutRef.current);
+            }
+        };
+    }, [jobColumns, formId, isLoading, saveData, prepareDataForSave]);
 
     const generateDateRange = (start, end) => {
         const dates = [];
@@ -140,39 +161,19 @@ const TrabalhosGrid = () => {
         return dates;
     };
 
-    const formatMonthYear = (date) => {
-        return new Intl.DateTimeFormat('pt-BR', {
-            month: 'short',
-            year: 'numeric'
-        }).format(date);
-    };
-
-    const formatCurrency = (value) => {
-        return new Intl.NumberFormat('pt-BR', {
-            style: 'currency',
-            currency: 'BRL'
-        }).format(value);
-    };
-
-    // Cell navigation helpers
-    const getCellCoords = (inputId) => {
-        const [rowIndex, colId] = inputId.split('-');
-        return { rowIndex: parseInt(rowIndex), colId: parseInt(colId) };
-    };
-
-    const getInputId = (rowIndex, colId) => `${rowIndex}-${colId}`;
-
-    const focusInput = (rowIndex, colId) => {
-        const inputId = getInputId(rowIndex, colId);
-        const input = inputRefs.current[inputId];
-        if (input) {
-            input.focus();
-            input.select();
-        }
-    };
-
     const handleKeyDown = (e, currentRowIndex, currentColId) => {
         const currentColIndex = jobColumns.findIndex(col => col.id === currentColId);
+
+        const getInputId = (rowIndex, colId) => `${rowIndex}-${colId}`;
+        
+        const focusInput = (rowIndex, colId) => {
+            const inputId = getInputId(rowIndex, colId);
+            const input = inputRefs.current[inputId];
+            if (input) {
+                input.focus();
+                input.select();
+            }
+        };
 
         switch (e.key) {
             case 'Enter':
@@ -227,7 +228,21 @@ const TrabalhosGrid = () => {
         }
     };
 
-    const addJobColumn = () => {
+    const handleStartDateChange = (newDate) => {
+        setStartDate(newDate);
+        if (newDate && endDate) {
+            setDateRange(generateDateRange(newDate, endDate));
+        }
+    };
+
+    const handleEndDateChange = (newDate) => {
+        setEndDate(newDate);
+        if (startDate && newDate) {
+            setDateRange(generateDateRange(startDate, newDate));
+        }
+    };
+
+    const handleAddJob = () => {
         setJobColumns([...jobColumns, {
             id: Date.now(),
             title: '',
@@ -237,13 +252,13 @@ const TrabalhosGrid = () => {
         }]);
     };
 
-    const removeJobColumn = (columnId) => {
+    const handleRemoveJob = (columnId) => {
         if (jobColumns.length > 1) {
             setJobColumns(jobColumns.filter(col => col.id !== columnId));
         }
     };
 
-    const updateCellValue = (dateKey, columnId, value) => {
+    const handleUpdateCell = (dateKey, columnId, value) => {
         setJobColumns(jobColumns.map(col => {
             if (col.id === columnId) {
                 return {
@@ -258,150 +273,44 @@ const TrabalhosGrid = () => {
         }));
     };
 
+    const handleUpdateJobTitle = (columnId, title) => {
+        setJobColumns(jobColumns.map(col =>
+            col.id === columnId ? { ...col, title } : col
+        ));
+    };
+
+    const handleUpdateJobType = (columnId, field, value) => {
+        setJobColumns(jobColumns.map(col =>
+            col.id === columnId ? { ...col, [field]: value } : col
+        ));
+    };
+
     if (isLoading) {
         return <div className="loading">Carregando...</div>;
     }
 
     return (
         <div className="grid-container">
-            {/* Date Selection Controls */}
-            <div className="date-controls">
-                <div className="date-input-group">
-                    <label>Data Inicial</label>
-                    <input
-                        type="month"
-                        value={startDate}
-                        onChange={(e) => setStartDate(e.target.value)}
-                        className="date-input"
-                    />
-                </div>
-                <div className="date-input-group">
-                    <label>Data Final</label>
-                    <input
-                        type="month"
-                        value={endDate}
-                        onChange={(e) => setEndDate(e.target.value)}
-                        className="date-input"
-                        min={startDate}
-                    />
-                </div>
-                <button
-                    onClick={addJobColumn}
-                    className="add-job-button"
-                    disabled={isSaving}
-                >
-                    + Adicionar Trabalho
-                </button>
-                <button
-                    onClick={saveGridData}
-                    className="save-button"
-                    disabled={isSaving}
-                >
-                    {isSaving ? 'Salvando...' : 'Salvar'}
-                </button>
-            </div>
-
-            {/* Grid */}
+            <DateRangeControls
+                startDate={startDate}
+                endDate={endDate}
+                onStartDateChange={handleStartDateChange}
+                onEndDateChange={handleEndDateChange}
+                onAddJob={handleAddJob}
+                saveStatus={saveStatus}
+            />
+            
             {dateRange.length > 0 ? (
-                <div className="table-container">
-                    <table className="grid-table">
-                        <thead>
-                            <tr>
-                                <th className="month-column">Mês</th>
-                                {jobColumns.map(column => (
-                                    <th key={column.id} className="job-column">
-                                        <div className="job-header">
-                                            <input
-                                                type="text"
-                                                className="job-title-input"
-                                                value={column.title}
-                                                onChange={(e) => {
-                                                    setJobColumns(jobColumns.map(col =>
-                                                        col.id === column.id ? { ...col, title: e.target.value } : col
-                                                    ));
-                                                }}
-                                                placeholder="Nome do Trabalho"
-                                            />
-                                            {jobColumns.length > 1 && (
-                                                <button
-                                                    onClick={() => removeJobColumn(column.id)}
-                                                    className="remove-job-button"
-                                                >
-                                                    ×
-                                                </button>
-                                            )}
-                                        </div>
-                                        <div className="job-type-controls">
-                                            <select
-                                                className="job-type-select"
-                                                value={column.type}
-                                                onChange={(e) => {
-                                                    setJobColumns(jobColumns.map(col =>
-                                                        col.id === column.id ? { ...col, type: e.target.value } : col
-                                                    ));
-                                                }}
-                                            >
-                                                <option value="RGPS">RGPS</option>
-                                                <option value="RPPS">RPPS</option>
-                                            </select>
-                                            <select
-                                                className="job-type-select"
-                                                value={column.employmentType}
-                                                onChange={(e) => {
-                                                    setJobColumns(jobColumns.map(col =>
-                                                        col.id === column.id ? { ...col, employmentType: e.target.value } : col
-                                                    ));
-                                                }}
-                                            >
-                                                <option value="Empregada">Empregada</option>
-                                                <option value="CI">CI</option>
-                                            </select>
-                                        </div>
-                                    </th>
-                                ))}
-                                <th>Total</th>
-                                <th>Teto</th>
-                                <th>SM</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {dateRange.map((date, rowIndex) => {
-                                const dateKey = date.toISOString().slice(0, 7);
-                                const rowTotal = jobColumns.reduce((sum, col) =>
-                                    sum + (Number(col.values[dateKey]) || 0), 0
-                                );
-                                const minimumWage = getMinimumWageForDate(dateKey);
-                                const teto = getTetoForDate(dateKey);
-
-                                return (
-                                    <tr key={dateKey}>
-                                        <td className="month-column">
-                                            {formatMonthYear(date)}
-                                        </td>
-                                        {jobColumns.map(column => {
-                                            const inputId = getInputId(rowIndex, column.id);
-                                            return (
-                                                <td key={`${dateKey}-${column.id}`}>
-                                                    <input
-                                                        ref={el => inputRefs.current[inputId] = el}
-                                                        type="number"
-                                                        className="salary-input"
-                                                        value={column.values[dateKey] || ''}
-                                                        onChange={(e) => updateCellValue(dateKey, column.id, e.target.value)}
-                                                        onKeyDown={(e) => handleKeyDown(e, rowIndex, column.id)}
-                                                    />
-                                                </td>
-                                            );
-                                        })}
-                                        <td className="total-column">{formatCurrency(rowTotal)}</td>
-                                        <td className="teto-column">{formatCurrency(teto)}</td>
-                                        <td className="sm-column">{formatCurrency(minimumWage)}</td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
-                </div>
+                <JobTable
+                    dateRange={dateRange}
+                    jobColumns={jobColumns}
+                    onUpdateCell={handleUpdateCell}
+                    onRemoveJob={handleRemoveJob}
+                    onUpdateJobTitle={handleUpdateJobTitle}
+                    onUpdateJobType={handleUpdateJobType}
+                    inputRefs={inputRefs}
+                    onKeyDown={handleKeyDown}
+                />
             ) : (
                 <div className="empty-state">
                     Selecione um período para visualizar os dados
