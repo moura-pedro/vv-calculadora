@@ -1,5 +1,6 @@
 // src/components/MultiStepForm/MultiStepForm.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import Stepper from '../Stepper/Stepper';
 import TrabalhosGrid from '../JobsForm/TrabalhosGrid';
 import './MultiStepForm.css';
@@ -13,6 +14,8 @@ const steps = [
 ];
 
 const MultiStepForm = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
     remuneracao: null,
@@ -20,6 +23,11 @@ const MultiStepForm = () => {
     tempoContribuicao: null,
     sobrevida: null
   });
+
+  // Add a back button to return to home
+  const handleBackToHome = () => {
+    navigate('/');
+  };
 
   const handleNext = () => {
     if (currentStep < steps.length) {
@@ -33,30 +41,6 @@ const MultiStepForm = () => {
     }
   };
 
-  const handleSalarioBeneficioSubmit = (data) => {
-    setFormData(prev => ({
-      ...prev,
-      salarioBeneficio: data
-    }));
-    handleNext();
-  };
-
-  const handleTempoContribuicaoSubmit = (data) => {
-    setFormData(prev => ({
-      ...prev,
-      tempoContribuicao: data
-    }));
-    handleNext();
-  };
-
-  const handleSobrevidaSubmit = (data) => {
-    setFormData(prev => ({
-      ...prev,
-      sobrevida: data
-    }));
-    handleNext();
-  };
-
   const renderStepContent = () => {
     switch (currentStep) {
       case 1:
@@ -64,6 +48,12 @@ const MultiStepForm = () => {
           <div className="step-content">
             <TrabalhosGrid />
             <div className="navigation-buttons">
+              <button 
+                className="back-button"
+                onClick={handleBackToHome}
+              >
+                Voltar para Home
+              </button>
               <button 
                 onClick={handleNext} 
                 className="next-button"
