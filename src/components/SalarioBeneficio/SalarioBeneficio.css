@@ -1,0 +1,50 @@
+.salario-beneficio-container {
+    padding: 20px;
+    background-color: white;
+}
+
+.salario-beneficio-container h2 {
+    color: #374151;
+    margin-bottom: 20px;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.salary-table-container {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    overflow-x: auto;
+}
+
+.salary-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.salary-table th {
+    background: #f8fafc;
+    padding: 12px 16px;
+    text-align: left;
+    font-weight: 600;
+    color: #374151;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+.salary-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid #e5e7eb;
+    color: #4b5563;
+}
+
+.value-cell {
+    text-align: right;
+    font-family: monospace;
+    font-weight: 500;
+}
+
+.loading {
+    padding: 20px;
+    text-align: center;
+    color: #6b7280;
+}

@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Stepper from '../Stepper/Stepper';
 import TrabalhosGrid from '../JobsForm/TrabalhosGrid';
+import SalarioBeneficio from '../SalarioBeneficio/SalarioBeneficio';
 import './MultiStepForm.css';
 
 const steps = [
@@ -64,29 +65,26 @@ const MultiStepForm = () => {
           </div>
         );
 
-      case 2:
-        return (
-          <div className="step-content">
-            <div className="step-placeholder">
-              <h2>Cálculo do Salário-de-Benefício</h2>
-              <p>Esta funcionalidade será implementada em breve.</p>
+        case 2:
+          return (
+            <div className="step-content">
+              <SalarioBeneficio formId={id} />
+              <div className="navigation-buttons">
+                <button 
+                  onClick={handleBack} 
+                  className="back-button"
+                >
+                  Voltar
+                </button>
+                <button 
+                  onClick={handleNext} 
+                  className="next-button"
+                >
+                  Próximo
+                </button>
+              </div>
             </div>
-            <div className="navigation-buttons">
-              <button 
-                onClick={handleBack} 
-                className="back-button"
-              >
-                Voltar
-              </button>
-              <button 
-                onClick={handleNext} 
-                className="next-button"
-              >
-                Próximo
-              </button>
-            </div>
-          </div>
-        );
+          );
 
       case 3:
         return (
