@@ -1,6 +1,7 @@
 import React from 'react';
 import { getMinimumWageForDate } from './SalarioMinimo';
 import { getTetoForDate } from './Teto';
+import GridRow from './GridRow';
 
 const JobTable = ({
     dateRange,
@@ -79,40 +80,17 @@ const JobTable = ({
                     </tr>
                 </thead>
                 <tbody>
-                    {dateRange.map((date, rowIndex) => {
-                        const dateKey = date.toISOString().slice(0, 7);
-                        const rowTotal = jobColumns.reduce((sum, col) =>
-                            sum + (Number(col.values[dateKey]) || 0), 0
-                        );
-                        const minimumWage = getMinimumWageForDate(dateKey);
-                        const teto = getTetoForDate(dateKey);
-
-                        return (
-                            <tr key={dateKey}>
-                                <td className="month-column">
-                                    {formatMonthYear(date)}
-                                </td>
-                                {jobColumns.map(column => {
-                                    const inputId = getInputId(rowIndex, column.id);
-                                    return (
-                                        <td key={`${dateKey}-${column.id}`}>
-                                            <input
-                                                ref={el => inputRefs.current[inputId] = el}
-                                                type="number"
-                                                className="salary-input"
-                                                value={column.values[dateKey] || ''} // Show empty string if value is 0 or undefined
-                                                onChange={(e) => onUpdateCell(dateKey, column.id, e.target.value)}
-                                                onKeyDown={(e) => onKeyDown(e, rowIndex, column.id)}
-                                            />
-                                        </td>
-                                    );
-                                })}
-                                <td className="total-column">{formatCurrency(rowTotal)}</td>
-                                <td className="teto-column">{formatCurrency(teto)}</td>
-                                <td className="sm-column">{formatCurrency(minimumWage)}</td>
-                            </tr>
-                        );
-                    })}
+                    {dateRange.map((date, rowIndex) => (
+                        <GridRow
+                            key={date.toISOString()}
+                            date={date}
+                            jobColumns={jobColumns}
+                            onUpdateCell={onUpdateCell}
+                            inputRefs={inputRefs}
+                            onKeyDown={onKeyDown}
+                            rowIndex={rowIndex}
+                        />
+                    ))}
                 </tbody>
             </table>
         </div>

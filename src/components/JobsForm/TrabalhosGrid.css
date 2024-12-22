@@ -145,9 +145,9 @@
   outline: none;
 }
 
-tr:hover td {
+/* tr:hover td {
   background-color: #f8fafc;
-}
+} */
 
 .total-column, 
 .teto-column, 
@@ -165,4 +165,28 @@ tr:hover td {
   text-align: center;
   padding: 40px;
   color: #6b7280;
+}
+
+.sm-column {
+  text-align: right;
+  font-family: monospace;
+}
+
+.adjusted-value {
+  font-size: 0.8em;
+  color: #666;
+  margin-top: 4px;
+  font-style: italic;
+}
+
+/* tr.highlight-yellow {
+  background-color: #FFF9C4 !important;
+} */
+
+/* tr.highlight-orange {
+  background-color: #FFE0B2 !important;
+} */
+
+tr.highlight-blue {
+  background-color: #BBDEFB !important;
 }
