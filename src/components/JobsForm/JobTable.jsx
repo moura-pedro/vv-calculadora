@@ -100,7 +100,7 @@ const JobTable = ({
                                                 ref={el => inputRefs.current[inputId] = el}
                                                 type="number"
                                                 className="salary-input"
-                                                value={column.values[dateKey] || ''}
+                                                value={column.values[dateKey] || ''} // Show empty string if value is 0 or undefined
                                                 onChange={(e) => onUpdateCell(dateKey, column.id, e.target.value)}
                                                 onKeyDown={(e) => onKeyDown(e, rowIndex, column.id)}
                                             />

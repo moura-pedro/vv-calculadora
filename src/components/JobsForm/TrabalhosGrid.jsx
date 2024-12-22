@@ -31,9 +31,9 @@ const TrabalhosGrid = () => {
                 .from('form_data')
                 .select('*')
                 .eq('form_id', formId);
-
+    
             if (error) throw error;
-
+    
             if (data && data.length > 0) {
                 // Group data by job
                 const jobsMap = new Map();
@@ -41,20 +41,24 @@ const TrabalhosGrid = () => {
                     if (!jobsMap.has(row.job_id)) {
                         jobsMap.set(row.job_id, {
                             id: row.job_id,
-                            title: row.job_title,
-                            type: row.job_type,
-                            employmentType: row.employment_type,
+                            title: row.job_title || '',
+                            type: row.job_type || 'RGPS',
+                            employmentType: row.employment_type || 'Empregada',
                             values: {}
                         });
                     }
-                    jobsMap.get(row.job_id).values[row.date] = row.salary;
+                    // Only set values that aren't zero
+                    if (row.salary !== 0) {
+                        jobsMap.get(row.job_id).values[row.date] = row.salary;
+                    }
                 });
-
+    
                 setJobColumns(Array.from(jobsMap.values()));
-
+    
                 // Set date range based on data
                 const dates = data.map(row => row.date);
-                const sortedDates = dates.sort();
+                const uniqueDates = [...new Set(dates)]; // Remove duplicates
+                const sortedDates = uniqueDates.sort();
                 setStartDate(sortedDates[0]);
                 setEndDate(sortedDates[sortedDates.length - 1]);
             }
@@ -65,7 +69,7 @@ const TrabalhosGrid = () => {
             setIsLoading(false);
         }
     };
-
+    
     useEffect(() => {
         if (formId) {
             loadFormData();
@@ -111,20 +115,22 @@ const TrabalhosGrid = () => {
     }, [formId]);
 
     const prepareDataForSave = useCallback(() => {
+        // Create an array of all dates in the range
+        const allDates = dateRange.map(date => date.toISOString().slice(0, 7));
+        
+        // For each job column and each date, create a data entry
         return jobColumns.flatMap(column => 
-            Object.entries(column.values)
-                .filter(([_, salary]) => salary !== null && salary !== '')
-                .map(([date, salary]) => ({
-                    form_id: formId,
-                    job_id: column.id,
-                    date,
-                    salary: parseFloat(salary) || 0,
-                    job_title: column.title,
-                    job_type: column.type,
-                    employment_type: column.employmentType
-                }))
+            allDates.map(date => ({
+                form_id: formId,
+                job_id: column.id,
+                date,
+                salary: parseFloat(column.values[date]) || 0, // Use 0 for empty cells
+                job_title: column.title,
+                job_type: column.type,
+                employment_type: column.employmentType
+            }))
         );
-    }, [jobColumns, formId]);
+    }, [jobColumns, formId, dateRange]);
 
     useEffect(() => {
         if (!isLoading && formId) {
