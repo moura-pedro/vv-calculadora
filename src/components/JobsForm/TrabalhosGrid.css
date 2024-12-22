@@ -134,10 +134,11 @@
 }
 
 .salary-input {
-  width: 100%;
+  width: 70%;
   padding: 6px 10px;
   border: 1px solid transparent;
   border-radius: 4px;
+  background-color: none;
 }
 
 .salary-input:focus {
