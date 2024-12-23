@@ -16,7 +16,8 @@
     "react-dom": "^18.3.1",
     "react-router-dom": "^7.0.2",
     "shadcn-ui": "^0.9.4",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwindcss-animate": "^1.0.7",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@eslint/js": "^9.15.0",
